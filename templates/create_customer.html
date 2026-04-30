@@ -1,1 +1,69 @@
-{% extends 'base.html' %}{% block body %}<form method='post' class='card card-body'><h5>Admit Customer</h5><input name='username' class='form-control my-1' placeholder='Login username'><input name='email' class='form-control my-1' placeholder='Email'><input name='mobile' class='form-control my-1' placeholder='Mobile'><input name='password' class='form-control my-1' placeholder='Temp password'><input name='full_name' class='form-control my-1' placeholder='Full name'><input name='permanent_address' class='form-control my-1' placeholder='Permanent address'><input name='emergency_contact' class='form-control my-1' placeholder='Emergency contact'><input name='company' class='form-control my-1' placeholder='Company'><input name='deposit_amount' class='form-control my-1' placeholder='Deposit'><label><input type='checkbox' name='with_food'> With Food</label><input name='pg_id' class='form-control my-1' placeholder='PG ID'><input name='room_id' class='form-control my-1' placeholder='Room ID'><button class='btn btn-success'>Admit</button></form>{% endblock %}
+{% extends 'base.html' %}
+{% block body %}
+<form method='post' class='card card-body'>
+  <h5>Admit Customer</h5>
+  <input name='username' class='form-control my-1' placeholder='Login username' required>
+  <input name='email' class='form-control my-1' placeholder='Email' required>
+  <input name='mobile' class='form-control my-1' placeholder='Mobile'>
+  <input name='password' class='form-control my-1' placeholder='Temp password' required>
+  <input name='full_name' class='form-control my-1' placeholder='Full name' required>
+  <input name='permanent_address' class='form-control my-1' placeholder='Permanent address' required>
+  <input name='emergency_contact' class='form-control my-1' placeholder='Emergency contact' required>
+  <input name='company' class='form-control my-1' placeholder='Company'>
+  <input name='deposit_amount' class='form-control my-1' placeholder='Deposit'>
+  <label><input type='checkbox' name='with_food'> With Food</label>
+
+  <label class='mt-2'>PG Name</label>
+  <select name='pg_id' id='pgSelect' class='form-select my-1' required>
+    <option value=''>Select PG</option>
+    {% for pg in pgs %}
+    <option value='{{pg.id}}'>{{pg.name}} - {{pg.city}}</option>
+    {% endfor %}
+  </select>
+
+  <label>Flat</label>
+  <select name='flat_id' id='flatSelect' class='form-select my-1'>
+    <option value=''>Select Flat</option>
+    {% for flat in flats %}
+    <option value='{{flat.id}}' data-pg='{{flat.pg_id}}'>{{flat.name}} (Floor {{flat.floor_number}})</option>
+    {% endfor %}
+  </select>
+
+  <label>Room</label>
+  <select name='room_id' id='roomSelect' class='form-select my-1'>
+    <option value=''>Select Room</option>
+    {% for room in rooms %}
+    <option value='{{room.id}}' data-flat='{{room.flat_id}}'>{{room.name}} - {{room.sharing_type}} - Capacity {{room.capacity}}</option>
+    {% endfor %}
+  </select>
+
+  <button class='btn btn-success mt-2'>Admit</button>
+</form>
+
+<script>
+const pgSelect = document.getElementById('pgSelect');
+const flatSelect = document.getElementById('flatSelect');
+const roomSelect = document.getElementById('roomSelect');
+
+function filterFlats() {
+  const pgId = pgSelect.value;
+  for (const opt of flatSelect.options) {
+    if (!opt.dataset.pg) continue;
+    opt.hidden = pgId && opt.dataset.pg !== pgId;
+  }
+  flatSelect.value = '';
+  filterRooms();
+}
+
+function filterRooms() {
+  const flatId = flatSelect.value;
+  for (const opt of roomSelect.options) {
+    if (!opt.dataset.flat) continue;
+    opt.hidden = flatId && opt.dataset.flat !== flatId;
+  }
+  roomSelect.value = '';
+}
+pgSelect.addEventListener('change', filterFlats);
+flatSelect.addEventListener('change', filterRooms);
+</script>
+{% endblock %}

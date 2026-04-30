@@ -29,7 +29,7 @@
       <h6>Unpaid Invoices</h6>
       <ul class='list-group'>
         {% for inv in unpaid %}
-          <li class='list-group-item'>Invoice #{{inv.id}} | {{inv.month_label}} | ₹{{inv.total_amount}}</li>
+          <li class='list-group-item d-flex justify-content-between align-items-center'><span>Invoice #{{inv.id}} | {{inv.month_label}} | ₹{{inv.total_amount}}</span><form method='post' action='/manager/invoice/{{inv.id}}/mark-paid' onsubmit="return confirm('Are you sure you want to mark this invoice as PAID?')"><button class='btn btn-success btn-sm'>Mark Paid</button></form></li>
         {% else %}
           <li class='list-group-item'>No unpaid invoices.</li>
         {% endfor %}

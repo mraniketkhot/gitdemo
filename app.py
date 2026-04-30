@@ -289,6 +289,7 @@ def create_room():
 @role_required('manager')
 def create_customer():
     pgs = PG.query.filter_by(manager_id=current_user.id).all()
+    flats = Flat.query.join(PG, PG.id == Flat.pg_id).filter(PG.manager_id == current_user.id).all()
     rooms = Room.query.join(Flat, Flat.id == Room.flat_id).join(PG, PG.id == Flat.pg_id).filter(PG.manager_id == current_user.id).all()
     if request.method == 'POST':
         if User.query.filter((User.username == request.form['username']) | (User.email == request.form['email']) | (User.mobile == request.form.get('mobile'))).first():
@@ -300,11 +301,20 @@ def create_customer():
         db.session.add(user)
         db.session.flush()
 
+        pg_id = int(request.form['pg_id'])
+        room_id = int(request.form['room_id']) if request.form.get('room_id') else None
+        if room_id:
+            room = Room.query.get_or_404(room_id)
+            flat = Flat.query.get_or_404(room.flat_id)
+            if flat.pg_id != pg_id:
+                flash('Selected room does not belong to selected PG.', 'danger')
+                return redirect(url_for('create_customer'))
+
         profile = CustomerProfile(
             user_id=user.id,
             manager_id=current_user.id,
-            pg_id=int(request.form['pg_id']),
-            room_id=int(request.form['room_id']) if request.form.get('room_id') else None,
+            pg_id=pg_id,
+            room_id=room_id,
             full_name=request.form['full_name'],
             permanent_address=request.form['permanent_address'],
             emergency_contact=request.form['emergency_contact'],
@@ -318,7 +328,7 @@ def create_customer():
         db.session.commit()
         flash('Customer admitted.', 'success')
         return redirect(url_for('dashboard'))
-    return render_template('create_customer.html', pgs=pgs, rooms=rooms)
+    return render_template('create_customer.html', pgs=pgs, flats=flats, rooms=rooms)
 
 
 @app.route('/manager/customer/<int:profile_id>/edit', methods=['GET', 'POST'])
@@ -370,6 +380,22 @@ def create_rent():
     flash('Invoice created.', 'success')
     return redirect(url_for('dashboard'))
 
+
+
+
+@app.route('/manager/invoice/<int:invoice_id>/mark-paid', methods=['POST'])
+@login_required
+@role_required('manager')
+def manager_mark_paid(invoice_id):
+    invoice = RentInvoice.query.get_or_404(invoice_id)
+    profile = CustomerProfile.query.get_or_404(invoice.customer_id)
+    if profile.manager_id != current_user.id:
+        flash('Invalid invoice access.', 'danger')
+        return redirect(url_for('dashboard'))
+    invoice.paid = True
+    db.session.commit()
+    flash('Invoice marked as paid by manager.', 'success')
+    return redirect(url_for('dashboard'))
 
 @app.route('/customer/pay/<int:invoice_id>')
 @login_required
