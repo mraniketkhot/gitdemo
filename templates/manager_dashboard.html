@@ -1,8 +1,87 @@
-{% extends 'base.html' %}{% block body %}
+{% extends 'base.html' %}
+{% block body %}
 <h4>Manager Dashboard</h4>
-<div class='mb-2'><a href='/manager/pg/create' class='btn btn-sm btn-primary'>Create PG</a> <a href='/manager/customer/create' class='btn btn-sm btn-success'>Admit Customer</a> <a href='/manager/reports' class='btn btn-sm btn-info'>Reports</a> <a href='/manager/mfa' class='btn btn-sm btn-warning'>Run MFA</a></div>
-<h5>Your PGs</h5><ul class='list-group'>{% for pg in pgs %}<li class='list-group-item'>{{pg.name}} - {{pg.city}} <a class='btn btn-sm btn-outline-primary' href='/manager/pg/{{pg.id}}/payment-settings'>Payment Settings</a></li>{% endfor %}</ul>
-<h5 class='mt-3'>Add Flat</h5><form method='post' action='/manager/flat/create' class='row g-1'><div class='col'><input name='name' class='form-control' placeholder='Flat Name'></div><div class='col'><input name='floor_number' class='form-control' placeholder='Floor'></div><div class='col'><input name='pg_id' class='form-control' placeholder='PG ID'></div><div class='col'><button class='btn btn-secondary'>Add</button></div></form>
-<h5 class='mt-3'>Add Room</h5><form method='post' action='/manager/room/create' class='row g-1'><div class='col'><input name='name' class='form-control' placeholder='Room Name'></div><div class='col'><select name='sharing_type' class='form-select'><option>single</option><option>two_share</option><option>three_share</option></select></div><div class='col'><input name='capacity' class='form-control' placeholder='Capacity'></div><div class='col'><input name='rent_per_bed' class='form-control' placeholder='Rent/Bed'></div><div class='col'><input name='flat_id' class='form-control' placeholder='Flat ID'></div><div class='col'><button class='btn btn-secondary'>Add</button></div></form>
-<h5 class='mt-3'>Create Monthly Rent</h5><form method='post' action='/manager/rent/create' class='row g-1'><div class='col'><input name='customer_id' class='form-control' placeholder='Customer Profile ID'></div><div class='col'><input name='month_label' class='form-control' placeholder='2026-04'></div><div class='col'><button class='btn btn-dark'>Create Invoice</button></div></form>
+<div class='mb-3'>
+  <a href='/manager/pg/create' class='btn btn-primary btn-sm'>Create PG</a>
+  <a href='/manager/customer/create' class='btn btn-success btn-sm'>Admit Customer</a>
+  <a href='/manager/reports' class='btn btn-info btn-sm'>Reports</a>
+  <a href='/manager/mfa' class='btn btn-warning btn-sm'>Verify MFA</a>
+</div>
+
+<div class='row g-3'>
+  <div class='col-md-6'>
+    <div class='card card-body'>
+      <h6>PGs</h6>
+      <ul class='list-group'>
+        {% for pg in pgs %}
+          <li class='list-group-item d-flex justify-content-between align-items-center'>
+            <span>#{{ pg.id }} {{ pg.name }} ({{ pg.city }})</span>
+            <a class='btn btn-outline-primary btn-sm' href='/manager/pg/{{ pg.id }}/payment-settings'>Payment Settings</a>
+          </li>
+        {% else %}
+          <li class='list-group-item'>No PG created yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class='col-md-6'>
+    <div class='card card-body'>
+      <h6>Unpaid Invoices</h6>
+      <ul class='list-group'>
+        {% for inv in unpaid %}
+          <li class='list-group-item'>Invoice #{{inv.id}} | {{inv.month_label}} | ₹{{inv.total_amount}}</li>
+        {% else %}
+          <li class='list-group-item'>No unpaid invoices.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class='row g-3 mt-1'>
+  <div class='col-md-6'><form method='post' action='/manager/flat/create' class='card card-body'>
+    <h6>Add Flat</h6><input name='name' class='form-control my-1' placeholder='Flat name' required>
+    <input type='number' name='floor_number' class='form-control my-1' placeholder='Floor number' required>
+    <select name='pg_id' class='form-select my-1'>{% for pg in pgs %}<option value='{{pg.id}}'>{{pg.name}}</option>{% endfor %}</select>
+    <button class='btn btn-secondary btn-sm mt-1'>Add Flat</button></form>
+  </div>
+
+  <div class='col-md-6'><form method='post' action='/manager/room/create' class='card card-body'>
+    <h6>Add Room</h6><input name='name' class='form-control my-1' placeholder='Room name' required>
+    <select name='sharing_type' class='form-select my-1'><option value='single'>Single</option><option value='two_share'>Two Share</option><option value='three_share'>Three Share</option></select>
+    <input name='capacity' type='number' class='form-control my-1' placeholder='Capacity' required>
+    <input name='rent_per_bed' type='number' step='0.01' class='form-control my-1' placeholder='Rent per bed' required>
+    <select name='flat_id' class='form-select my-1'>{% for flat in flats %}<option value='{{flat.id}}'>#{{flat.id}} {{flat.name}} (Floor {{flat.floor_number}})</option>{% endfor %}</select>
+    <button class='btn btn-secondary btn-sm mt-1'>Add Room</button></form>
+  </div>
+</div>
+
+<div class='row g-3 mt-1'>
+  <div class='col-md-6'><form method='post' action='/manager/rent/create' class='card card-body'>
+    <h6>Create Invoice</h6>
+    <select name='customer_id' class='form-select my-1'>{% for c in customers if c.status == 'admitted' %}<option value='{{c.id}}'>#{{c.id}} {{c.full_name}}</option>{% endfor %}</select>
+    <input name='month_label' class='form-control my-1' placeholder='YYYY-MM' required>
+    <button class='btn btn-dark btn-sm mt-1'>Create Invoice</button>
+  </form></div>
+
+  <div class='col-md-6'><div class='card card-body'><h6>Customers</h6>
+    <ul class='list-group'>
+      {% for c in customers %}
+      <li class='list-group-item d-flex justify-content-between align-items-center'>
+        <span>{{c.full_name}} ({{c.status}})</span>
+        <span>
+          <a href='/manager/customer/{{c.id}}/edit' class='btn btn-outline-primary btn-sm'>Edit</a>
+          {% if c.status != 'exited' %}
+          <form method='post' action='/manager/customer/{{c.id}}/exit' style='display:inline'>
+            <button class='btn btn-outline-danger btn-sm'>Exit</button>
+          </form>
+          {% endif %}
+        </span>
+      </li>
+      {% else %}
+      <li class='list-group-item'>No customers yet.</li>
+      {% endfor %}
+    </ul>
+  </div></div>
+</div>
 {% endblock %}

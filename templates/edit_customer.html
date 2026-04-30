@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block body %}
+<form method='post' class='card card-body'>
+  <h5>Edit Customer: {{profile.full_name}}</h5>
+  <input name='company' value='{{profile.company or ""}}' class='form-control my-1' placeholder='Company'>
+  <input name='deposit_amount' value='{{profile.deposit_amount}}' class='form-control my-1' placeholder='Deposit'>
+  <label><input type='checkbox' name='with_food' {% if profile.with_food %}checked{% endif %}> With Food</label>
+  <button class='btn btn-primary mt-2'>Save</button>
+</form>
+{% endblock %}
