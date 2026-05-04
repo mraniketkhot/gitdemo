@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block body %}
+<h4>Customer Dashboard</h4>
+{% if profile %}
+<p><strong>Status:</strong> {{profile.status}} | <strong>Food:</strong> {{'Yes' if profile.with_food else 'No'}} | <strong>Deposit:</strong> ₹{{profile.deposit_amount}}</p>
+<ul class='list-group'>
+  {% for i in invoices %}
+  <li class='list-group-item d-flex justify-content-between align-items-center'>
+    <span>{{i.month_label}} - ₹{{i.total_amount}} - {{'Paid' if i.paid else 'Unpaid'}}</span>
+    {% if not i.paid %}<a class='btn btn-primary btn-sm' href='/customer/pay/{{i.id}}'>Pay</a>{% endif %}
+  </li>
+  {% else %}
+  <li class='list-group-item'>No invoices yet.</li>
+  {% endfor %}
+</ul>
+{% else %}<p>Waiting for manager admission.</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block body %}
+<h5>Pay Invoice {{invoice.month_label}}</h5>
+<p>Total Amount: ₹{{invoice.total_amount}}</p>
+{% if upi_deeplink %}<a href='{{upi_deeplink}}' class='btn btn-success'>Open UPI App</a>{% endif %}
+{% if pg.qr_code_url %}<div class='mt-3'><p>Desktop QR:</p><img src='{{pg.qr_code_url}}' style='max-width:220px'></div>{% endif %}
+<p class='mt-2'>Bank: {{pg.bank_account or "N/A"}} | IFSC: {{pg.ifsc or "N/A"}}</p>
+<form method='post' action='/customer/mark-paid/{{invoice.id}}'><button class='btn btn-primary'>I Have Paid</button></form>
+{% endblock %}
